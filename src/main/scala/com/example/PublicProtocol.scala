@@ -1,5 +1,10 @@
 package com.example.shared
 
+// TODO: use generic derivation
+/*
+https://stackoverflow.com/questions/42165460/how-to-decode-an-adt-with-circe-without-disambiguating-objects
+*/
+
 object PublicProtocol {
   sealed trait Message
   sealed trait Typed extends Message{

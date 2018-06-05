@@ -2,14 +2,15 @@ package com.example.shared
 
 object PublicProtocol {
   sealed trait Message
-  case class TextMessage(message: String) extends Message // in
-  case class TextMessageWithSender(id: String, message: String) extends Message // out
-  case class Joined(id: String) extends Message // out
-  case class Left(id: String) extends Message // out
-}
-
-object Roles {
-  sealed trait Role
-  object Admin extends Role
-  object User extends Role
+  sealed trait Typed extends Message{
+    val $type : String
+  }
+  case class Auth($type : String = "login", username: String, password: String) extends Typed
+  case class TextMessage($type : String, message: String) extends Typed
+  //case class TextMessageWithSender($type : String, message: String) extends Typed
+  //case class Joined(id: String) extends Message
+  //case class Left(id: String) extends Message
+  case class LoginFailed($type : String = "login_failed") extends Typed
+  case class LoginSuccess($type : String = "login_successful", user_type : String) extends Typed
+  case class Heartbeat($type : String, seq : Int) extends Typed
 }

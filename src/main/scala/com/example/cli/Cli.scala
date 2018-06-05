@@ -1,20 +1,9 @@
 package com.example.cli
 
-import scala.collection.immutable.Seq
-import akka.Done
-import akka.actor.ActorSystem
-import akka.http.scaladsl.Http
-import akka.http.scaladsl.model._
-import akka.http.scaladsl.model.headers._
-import akka.http.scaladsl.model.ws._
-import akka.stream.ActorMaterializer
-import akka.stream.scaladsl._
-
-import scala.concurrent.{ Future, Promise }
-
 // https://doc.akka.io/docs/akka-http/current/client-side/websocket-support.html
 
 object Main extends App {
+  /*
   implicit val system = ActorSystem()
   implicit val materializer = ActorMaterializer()
   import system.dispatcher
@@ -76,4 +65,5 @@ object Main extends App {
   promise.success(None)
 
   //closed.foreach(_ => println("closed"))
+  */
 }

@@ -1,13 +1,22 @@
 package com.example.workflow
 
 import akka.actor.ActorRef
-import com.example.shared.PublicProtocol
 
 object PrivateProtocol {
   sealed trait Event
-  case class Joined(id: String, ref: ActorRef) extends Event
-  case class Left(id: String) extends Event
-  case class ReceivedMessage(id: String, message: String) extends Event {
-    def toMessage: PublicProtocol.TextMessageWithSender = PublicProtocol.TextMessageWithSender(id, message)
+  case class Joined(ref: ActorRef, role: Roles.Role) extends Event
+  case object Left extends Event
+  /*
+  case class ReceivedMessage(message: String) extends Event {
+    def toMessage: PublicProtocol.TextMessageWithSender = PublicProtocol.TextMessageWithSender(message)
   }
+  */
+  case class Role(role : Roles.Role) extends Event
+}
+
+object Roles {
+  sealed trait Role
+  object Admin extends Role
+  object User extends Role
+  object Unknown extends Role
 }

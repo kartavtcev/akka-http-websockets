@@ -19,6 +19,7 @@ trait Workflow {
 }
 
 object Workflow {
+  def uuid = java.util.UUID.randomUUID.toString
 
   def create(system: ActorSystem)(implicit ec: ExecutionContext): Workflow = {
     lazy val log = Logging(system, classOf[Workflow])
@@ -27,17 +28,22 @@ object Workflow {
 
     new Workflow {
       def flow: Flow[PublicProtocol.Message, PublicProtocol.Message, Any] = {
+        val connectId = uuid
+
         // sink -> UserLeft -> workflow actor; + ReceivedMessage's In
         val in =
           Flow[PublicProtocol.Message]
-            //.collect { case PublicProtocol.TextMessage(message) => (ReceivedMessage(, message)) }
-            .to(Sink.actorRef[PublicProtocol.Message](workflowActor, Left))
+            .collect { case message : PublicProtocol.Message =>  IdWithInMessage(connectId, message) }
+            .to(Sink.actorRef[Event](workflowActor, Left(connectId)))
+
+            //Sink.actorRef[PublicProtocol.Message]
+              //.mapMaterializedValue(workflowActor ! Left)
 
         // source -> materialized actor -> NewUser + ActorRef -> workflow actor; + PublicProtocol.Message's Out
         // buffer 1 message, then fail; actor Tell ! strategy
         val out =
           Source.actorRef[PublicProtocol.Message](1, OverflowStrategy.fail)
-            .mapMaterializedValue(workflowActor ! Joined(_, Roles.Unknown))
+            .mapMaterializedValue(workflowActor ! Joined(connectId, Roles.Unknown, _))
 
         Flow.fromSinkAndSource(in, out)
       }
@@ -50,36 +56,46 @@ object WorkflowActor {
 }
 
 class WorkflowActor(val log: LoggingAdapter, val authActor : ActorRef)(implicit ec: ExecutionContext) extends Actor {
-  var connected = Map.empty[ActorRef, (Option[String], Roles.Role)]
-  implicit val timeout: Timeout = Timeout(5 seconds)
+  var connected = Map.empty[String, (Option[String], Roles.Role, ActorRef)]
+  implicit val timeout: Timeout = Timeout(1 seconds)
 
   override def receive: Receive = {
-    case Joined(ref, role) =>
-      log.info(s"new user: ${ref.toString()}")
+    case Joined(connectId, role, ref) =>
+      log.info(s"new user: $connectId")
       //context.watch(ref) // subscribe to death watch
-      connected += (ref -> (None, role))
+      connected += (connectId -> (None, role, ref))
       //broadcast(PublicProtocol.Joined(id))
 
-    case msg : PublicProtocol.Auth =>
-      val ref = sender()
-      (authActor ? msg).onComplete {        // TODO: future.flatMap
-        case Success(Role(role)) =>
-          connected.keys.find(_ == ref) match {
-            case Some(key) =>
-              val mapV = connected.get(key).get
-              connected -= key
-              connected += (key -> (Some(msg.username), role))
-          }
-        role match {
-          case Roles.Admin => sender() ! PublicProtocol.LoginSuccess(user_type = "admin")
-          case Roles.User =>  sender() ! PublicProtocol.LoginSuccess(user_type = "user")
-          case Roles.Unknown => sender() ! PublicProtocol.LoginFailed
-        }
+    case IdWithInMessage(connectId, message) => //idWithInMessage : IdWithInMessage =>
+      message match {
+        case auth: PublicProtocol.Auth => {
+          //(connectId : String, auth: PublicProtocol.Auth) => //idWithInMessage : IdWithInMessage => // TODO: incoming message from Sink has ref Actor[akka://com-example-httpServer/deadLetters]
+          log.info(s"auth: ${connectId}")
 
-        case Failure(err) => log.error(err.toString)
+          (authActor ? auth).onComplete {
+            // TODO: future.flatMap
+            case Success(Role(role)) =>
+              connected.foreach(c => log.info(c.toString()))
+              connected.keys.find(connectId == _) match {
+                case Some(key) =>
+                  val ref = connected.get(key).get._3
+                  connected -= key
+                  connected += (key -> (Some(auth.username), role, ref))
+
+                  role match {
+                    case Roles.Admin => ref ! PublicProtocol.LoginSuccess(user_type = "admin")
+                    case Roles.User => ref ! PublicProtocol.LoginSuccess(user_type = "user")
+                    case Roles.Unknown => ref ! PublicProtocol.LoginFailed
+                  }
+              }
+
+            case Failure(err) => log.error(err.toString)
+          }
+        }
       }
 
-    case PublicProtocol.Heartbeat(_, seq) => sender() ! PublicProtocol.Heartbeat("pong", seq)
+    case (connectId : String, PublicProtocol.Heartbeat(_, seq)) =>
+      connected.get(connectId).get._3 ! PublicProtocol.Heartbeat("pong", seq)
 
       /*
     case msg: PublicProtocol.Message =>
@@ -87,10 +103,9 @@ class WorkflowActor(val log: LoggingAdapter, val authActor : ActorRef)(implicit 
 
       //broadcast(msg.toMessage)
 */
-    case Left =>
-      val ref = sender()
-      log.info(s"user left: ${ref.toString()}")
-      connected = connected.filterNot(_._1 == ref)
+    case Left(connectId) =>
+      log.info(s"user left: $connectId")
+      connected = connected.filterNot(_._1 == connectId)
 
       /*
     case Terminated(ref) =>

@@ -29,7 +29,7 @@ class AuthActor(val log: LoggingAdapter) extends Actor {
     case PublicProtocol.Auth(_, username, password) =>
       val admin = adminsCredentials.find(_ == (username, password))
       lazy val user = userCredentials.find(_ == (username, password))
-      // TODO: use Option.Map2 monadic combinator
+      // TODO: use Monad.Map2 monadic combinator
       admin match {
         case Some(_) => sender() ! PrivateProtocol.Role(Roles.Admin)
         case None =>

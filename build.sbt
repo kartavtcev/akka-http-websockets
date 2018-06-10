@@ -26,12 +26,4 @@ lazy val root = (project in file(".")).
       "io.circe" %% "circe-parser",
       "io.circe" %% "circe-shapes"
     ).map(_ % circeVersion)
-/*
-    //++
-    //Seq("org.scalamacros" % "paradise" % "2.12.6")
-    ,
-    //autoCompilerPlugins := true,
-    resolvers += Resolver.sonatypeRepo("releases"),
-    addCompilerPlugin("org.scalamacros" % "paradise" % "2.1.1" cross CrossVersion.full)
-    */
   )

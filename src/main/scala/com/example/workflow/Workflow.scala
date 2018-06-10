@@ -36,9 +36,6 @@ object Workflow {
             .collect { case message : PublicProtocol.Message =>  IdWithInMessage(connectId, message) }
             .to(Sink.actorRef[Event](workflowActor, Left(connectId)))
 
-            //Sink.actorRef[PublicProtocol.Message]
-              //.mapMaterializedValue(workflowActor ! Left)
-
         // source -> materialized actor -> NewUser + ActorRef -> workflow actor; + PublicProtocol.Message's Out
         // buffer 1 message, then fail; actor Tell ! strategy
         val out =
@@ -59,6 +56,8 @@ class WorkflowActor(val log: LoggingAdapter, val authActor : ActorRef)(implicit 
   var connected = Map.empty[String, (Option[String], Roles.Role, ActorRef)]
   implicit val timeout: Timeout = Timeout(1 seconds)
 
+  def actorRefById(connectId : String) : ActorRef = connected.get(connectId).get._3
+
   override def receive: Receive = {
     case Joined(connectId, role, ref) =>
       log.info(s"new user: $connectId")
@@ -66,10 +65,9 @@ class WorkflowActor(val log: LoggingAdapter, val authActor : ActorRef)(implicit 
       connected += (connectId -> (None, role, ref))
       //broadcast(PublicProtocol.Joined(id))
 
-    case IdWithInMessage(connectId, message) => //idWithInMessage : IdWithInMessage =>
+    case IdWithInMessage(connectId, message) =>
       message match {
         case auth: PublicProtocol.login => {
-          //(connectId : String, auth: PublicProtocol.Auth) => //idWithInMessage : IdWithInMessage => // TODO: incoming message from Sink has ref Actor[akka://com-example-httpServer/deadLetters]
           log.info(s"auth: ${connectId}")
 
           (authActor ? auth).onComplete {
@@ -78,7 +76,7 @@ class WorkflowActor(val log: LoggingAdapter, val authActor : ActorRef)(implicit 
               connected.foreach(c => log.info(c.toString()))
               connected.keys.find(connectId == _) match {
                 case Some(key) =>
-                  val ref = connected.get(key).get._3
+                  val ref = actorRefById(key)
                   connected -= key
                   connected += (key -> (Some(auth.username), role, ref))
 
@@ -92,17 +90,12 @@ class WorkflowActor(val log: LoggingAdapter, val authActor : ActorRef)(implicit 
             case Failure(err) => log.error(err.toString)
           }
         }
+        case PublicProtocol.ping(seq) =>
+          actorRefById(connectId) ! PublicProtocol.pong(seq)
+        case msg : PublicProtocol.failure =>
+          actorRefById(connectId) ! PublicProtocol.failure
       }
 
-    case (connectId : String, PublicProtocol.ping(seq)) =>
-      connected.get(connectId).get._3 ! PublicProtocol.pong(seq)
-
-      /*
-    case msg: PublicProtocol.Message =>
-      log.info(s"received message: ${msg.message}; from ${msg.id}")
-
-      //broadcast(msg.toMessage)
-*/
     case Left(connectId) =>
       log.info(s"user left: $connectId")
       connected = connected.filterNot(_._1 == connectId)
@@ -111,17 +104,6 @@ class WorkflowActor(val log: LoggingAdapter, val authActor : ActorRef)(implicit 
     case Terminated(ref) =>
       log.info(s"user left: ${ref.toString()}")
       connected = connected.filterNot(_._1 == ref)
-      */
-      /*
-    case Left(id) =>
-      log.info(s"user left: $id")
-
-      connected.keys.find(_ == id) match {
-        case Some(key) =>
-          connected = connected.filterKeys(_ != key)
-          //broadcast(PublicProtocol.Left(id))
-        case _ => ()
-      }
       */
   }
 

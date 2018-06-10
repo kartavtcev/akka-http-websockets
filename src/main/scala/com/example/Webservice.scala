@@ -21,47 +21,15 @@ class Webservice(wsUrl: String) (implicit system: ActorSystem, ec: ExecutionCont
 
   val workflow = Workflow.create(system)
   lazy val log = Logging(system, classOf[Webservice])
-  implicit val genDevConfig: Configuration = Configuration.default.withDiscriminator("$type")
-
-  /*
-  def userPassAuthenticator(credentials: Credentials): Option[Roles.Role] = {
-    credentials match {
-      case p @ Credentials.Provided(id) if p.verify("admin") => Some(Roles.Admin) // Do not repeat this at home! Store PWD as hash + salt.
-      case _ => None
-    }
-  }
-
-  def userPassAuthenticatorPassAll(credentials: Credentials): Option[Roles.Role] = {
-    credentials match {
-      case p @ Credentials.Provided(id) if p.verify("admin") => Some(Roles.Admin) // Do not repeat this at home! Store PWD as hash + salt.
-      case _ => Some(Roles.User) //None
-    }
-  }
-*/
 
   def route: Route = {
     pathPrefix(wsUrl) {
-      concat(
-
-        /*pathPrefix("admin") {
-          // separate admin auth
-          authenticateBasic(realm = "secure site", userPassAuthenticator) { auth => complete(s"${auth.toString}") }
-        },*/
-        //parameter("id") { id =>
           handleWebSocketMessages(websocketChatFlow)
-          /*
-          // admin auth for websockets
-          // TODO: fix IntelliJ IDEA incorrect red highlighting
-          authenticateBasic(realm = "secure site", userPassAuthenticatorPassAll) { auth =>
-            log.info(s"id = $id, auth = $auth")
-            handleWebSocketMessages(websocketChatFlow(id = id))
-          }*/
-        //}
-      )
     }
   }
 
   def websocketChatFlow: Flow[Message, Message, Any] = {
+    implicit val genDevConfig: Configuration = Configuration.default.withDiscriminator("$type")
 
     Flow[Message]
       .collect {
@@ -73,7 +41,7 @@ class Webservice(wsUrl: String) (implicit system: ActorSystem, ec: ExecutionCont
         case Right(msg) => msg
         case Left(err) =>
           log.error(err.toString())
-          PublicProtocol.TextMessage("failure", "Error happened. Sorry :(")
+          PublicProtocol.failure("Error happened. Sorry :(")
       }
       .via(workflow.flow)
       .map {

@@ -68,7 +68,7 @@ class WorkflowActor(val log: LoggingAdapter, val authActor : ActorRef)(implicit 
 
     case IdWithInMessage(connectId, message) => //idWithInMessage : IdWithInMessage =>
       message match {
-        case auth: PublicProtocol.Auth => {
+        case auth: PublicProtocol.login => {
           //(connectId : String, auth: PublicProtocol.Auth) => //idWithInMessage : IdWithInMessage => // TODO: incoming message from Sink has ref Actor[akka://com-example-httpServer/deadLetters]
           log.info(s"auth: ${connectId}")
 
@@ -83,9 +83,9 @@ class WorkflowActor(val log: LoggingAdapter, val authActor : ActorRef)(implicit 
                   connected += (key -> (Some(auth.username), role, ref))
 
                   role match {
-                    case Roles.Admin => ref ! PublicProtocol.LoginSuccess(user_type = "admin")
-                    case Roles.User => ref ! PublicProtocol.LoginSuccess(user_type = "user")
-                    case Roles.Unknown => ref ! PublicProtocol.LoginFailed
+                    case Roles.Admin => ref ! PublicProtocol.login_successful(user_type = "admin")
+                    case Roles.User => ref ! PublicProtocol.login_successful(user_type = "user")
+                    case Roles.Unknown => ref ! PublicProtocol.login_failed
                   }
               }
 
@@ -94,8 +94,8 @@ class WorkflowActor(val log: LoggingAdapter, val authActor : ActorRef)(implicit 
         }
       }
 
-    case (connectId : String, PublicProtocol.Heartbeat(_, seq)) =>
-      connected.get(connectId).get._3 ! PublicProtocol.Heartbeat("pong", seq)
+    case (connectId : String, PublicProtocol.ping(seq)) =>
+      connected.get(connectId).get._3 ! PublicProtocol.pong(seq)
 
       /*
     case msg: PublicProtocol.Message =>

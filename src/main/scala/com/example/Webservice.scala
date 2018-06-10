@@ -5,19 +5,23 @@ import akka.event.Logging
 import akka.http.scaladsl.model.ws.{Message, TextMessage}
 import akka.http.scaladsl.server.{Directives, Route}
 import akka.stream.scaladsl.Flow
-import com.example.shared.PublicProtocol
-import com.example.workflow.Workflow
-import io.circe.generic.auto._
-import io.circe.parser._
-import io.circe.syntax._
 
 import scala.concurrent.ExecutionContext
 import scala.util.Failure
+
+import io.circe.generic.extras.Configuration
+import io.circe.generic.extras.auto._
+import io.circe.parser.decode
+import io.circe.syntax._
+
+import com.example.shared.PublicProtocol
+import com.example.workflow.Workflow
 
 class Webservice(wsUrl: String) (implicit system: ActorSystem, ec: ExecutionContext) extends Directives {
 
   val workflow = Workflow.create(system)
   lazy val log = Logging(system, classOf[Webservice])
+  implicit val genDevConfig: Configuration = Configuration.default.withDiscriminator("$type")
 
   /*
   def userPassAuthenticator(credentials: Credentials): Option[Roles.Role] = {
@@ -57,7 +61,8 @@ class Webservice(wsUrl: String) (implicit system: ActorSystem, ec: ExecutionCont
     }
   }
 
-  def websocketChatFlow: Flow[Message, Message, Any] =
+  def websocketChatFlow: Flow[Message, Message, Any] = {
+
     Flow[Message]
       .collect {
         case TextMessage.Strict(msg) ⇒ msg
@@ -68,13 +73,14 @@ class Webservice(wsUrl: String) (implicit system: ActorSystem, ec: ExecutionCont
         case Right(msg) => msg
         case Left(err) =>
           log.error(err.toString())
-          PublicProtocol.TextMessage("failure" ,"Error happened. Sorry :(")
+          PublicProtocol.TextMessage("failure", "Error happened. Sorry :(")
       }
       .via(workflow.flow)
       .map {
         case msg: PublicProtocol.Message ⇒ TextMessage.Strict(msg.asJson.noSpaces)
       }
       .via(reportErrorsFlow)
+  }
 
   def reportErrorsFlow[T]: Flow[T, T, Any] =
     Flow[T]

@@ -22,7 +22,9 @@ lazy val root = (project in file(".")).
     ++ Seq(
       "io.circe" %% "circe-core",
       "io.circe" %% "circe-generic",
-      "io.circe" %% "circe-parser"
+      "io.circe" %% "circe-generic-extras",
+      "io.circe" %% "circe-parser",
+      "io.circe" %% "circe-shapes"
     ).map(_ % circeVersion)
 /*
     //++

@@ -26,7 +26,7 @@ class AuthActor(val log: LoggingAdapter) extends Actor {
   var userCredentials = Map[String, String] ("user1234" -> "password1234")
 
   override def receive: Receive = {
-    case PublicProtocol.Auth(_, username, password) =>
+    case PublicProtocol.login(username, password) =>
       val admin = adminsCredentials.find(_ == (username, password))
       lazy val user = userCredentials.find(_ == (username, password))
       // TODO: use Monad.Map2 monadic combinator

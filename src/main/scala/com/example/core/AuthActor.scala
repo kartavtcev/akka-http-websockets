@@ -20,6 +20,7 @@ object AuthActor {
   }
 }
 
+// auth actor handles all things related to authentication & authorization
 class AuthActor(val log: LoggingAdapter) extends Actor {
   var imitateDBUserNamePassword = Map[String, String] ("admin" -> "admin", "user1234" -> "password1234") // NOT TODO: do not repeat this at home. Use hash + salt for PWD storage.
   var imitateDBUserRole = Map[String, Roles.Role] ("admin" -> Roles.Admin, "user1234" -> Roles.User)
@@ -31,6 +32,10 @@ class AuthActor(val log: LoggingAdapter) extends Actor {
         imitateDBUserNamePassword
           .find(_ == (username, password))
           .flatMap{ case (name, _) => imitateDBUserRole.get(name) }
+      sender() ! PrivateProtocol.Role(r)
+
+    case PrivateProtocol.RoleByNameRequest(username) =>
+      val r = imitateDBUserRole.get(username)
       sender() ! PrivateProtocol.Role(r)
   }
 }

@@ -24,6 +24,8 @@ object Workflow {
   def create(system: ActorSystem)(implicit ec: ExecutionContext): Workflow = {
     lazy val log = Logging(system, classOf[Workflow])
     val authActor = system.actorOf(AuthActor.props(log), "authActor")
+
+    // TODO: flow is served by single actor, i.e. similar to single thread. => Workflow actor must not stuck/lock/wait.
     val workflowActor = system.actorOf(WorkflowActor.props(log, authActor), "workflowActor")
 
     new Workflow {
@@ -53,18 +55,16 @@ object WorkflowActor {
 }
 
 class WorkflowActor(val log: LoggingAdapter, val authActor : ActorRef)(implicit ec: ExecutionContext) extends Actor {
-  var connected = Map.empty[String, (Option[String], Option[Roles.Role], ActorRef)]
+  var connected = Map.empty[String, (Option[String], ActorRef)]   // store only username if user is authenticated + authorized
   implicit val timeout: Timeout = Timeout(1 seconds)
 
-  def actorRefById(connectId : String) : ActorRef = connected.get(connectId).get._3
+  def actorRefById(connectId : String) : ActorRef = connected.get(connectId).get._2
+  def replaceValueByKey(key : String, username: Option[String], ref : ActorRef) : Unit = {
+    connected -= key
+    connected += (key -> (username, ref))
+  }
 
   override def receive: Receive = {
-    case Joined(connectId, ref) =>
-      log.info(s"new user: $connectId")
-      //context.watch(ref) // subscribe to death watch
-      connected += (connectId -> (None, None, ref))
-      //broadcast(PublicProtocol.Joined(id))
-
     case IdWithInMessage(connectId, message) =>
       message match {
         case auth: PublicProtocol.login => {              // TODO: multiple logins reject.
@@ -76,12 +76,16 @@ class WorkflowActor(val log: LoggingAdapter, val authActor : ActorRef)(implicit 
               connected.keys.find(connectId == _) match {
                 case Some(key) =>
                   val ref = actorRefById(key)
-                  connected -= key
-                  connected += (key -> (Some(auth.username), role, ref))
 
                   role match {
-                    case Some(Roles.Admin) => ref ! PublicProtocol.login_successful(user_type = "admin")
-                    case Some(Roles.User) => ref ! PublicProtocol.login_successful(user_type = "user")
+                    case Some(Roles.Admin) =>
+                      replaceValueByKey(key, Some(auth.username), ref)
+                      ref ! PublicProtocol.login_successful(user_type = "admin")
+
+                    case Some(Roles.User) =>
+                      replaceValueByKey(key, Some(auth.username), ref)
+                      ref ! PublicProtocol.login_successful(user_type = "user")
+
                     case None => ref ! PublicProtocol.login_failed
                   }
               }
@@ -93,17 +97,21 @@ class WorkflowActor(val log: LoggingAdapter, val authActor : ActorRef)(implicit 
           actorRefById(connectId) ! PublicProtocol.pong(seq)
         case msg : PublicProtocol.failure =>
           actorRefById(connectId) ! PublicProtocol.failure
+
+          // TODO: case
+
+        case msg : PublicProtocol.Message =>
+          log.warning(s"Unmatched message: ${msg.toString}")
+          PublicProtocol.failure("Error happened. Sorry :(")
       }
+
+    case Joined(connectId, ref) =>
+      log.info(s"new user: $connectId")
+      connected += (connectId -> (None, ref))
 
     case Left(connectId) =>
       log.info(s"user left: $connectId")
       connected = connected.filterNot(_._1 == connectId)
-
-      /*
-    case Terminated(ref) =>
-      log.info(s"user left: ${ref.toString()}")
-      connected = connected.filterNot(_._1 == ref)
-      */
   }
 
   //def broadcast(msg: PublicProtocol.Message): Unit = connected.foreach { case (_, ref) => ref ! msg }

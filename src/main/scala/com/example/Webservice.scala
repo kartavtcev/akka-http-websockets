@@ -49,6 +49,11 @@ class Webservice(wsUrl: String) (implicit system: ActorSystem, ec: ExecutionCont
       }
       .via(reportErrorsFlow)
   }
+  /*
+   Above is WebSockets interaction using Akka Stream lib.
+   Another way to implement it could be with Monix reactive observables (familiar to me from .NET Rx library)
+   https://github.com/monix/monix-sample/blob/master/client/src/main/scala/client/SimpleWebSocketClient.scala
+  */
 
   def reportErrorsFlow[T]: Flow[T, T, Any] =
     Flow[T]

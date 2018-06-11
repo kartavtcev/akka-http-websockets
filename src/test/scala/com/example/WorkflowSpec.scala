@@ -10,6 +10,6 @@ import org.scalatest.{ Matchers, WordSpec }
 
 class WorkflowSpec extends WordSpec with Matchers with ScalaFutures with ScalatestRouteTest
     with Webservice.route {
-    /// ... no tests yet
+    // ... no tests yet
 }
 */

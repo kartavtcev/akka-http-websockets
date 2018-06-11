@@ -40,7 +40,7 @@ object Workflow {
         // buffer 1 message, then fail; actor Tell ! strategy
         val out =
           Source.actorRef[PublicProtocol.Message](1, OverflowStrategy.fail)
-            .mapMaterializedValue(workflowActor ! Joined(connectId, Roles.Unknown, _))
+            .mapMaterializedValue(workflowActor ! Joined(connectId, _))
 
         Flow.fromSinkAndSource(in, out)
       }
@@ -53,27 +53,26 @@ object WorkflowActor {
 }
 
 class WorkflowActor(val log: LoggingAdapter, val authActor : ActorRef)(implicit ec: ExecutionContext) extends Actor {
-  var connected = Map.empty[String, (Option[String], Roles.Role, ActorRef)]
+  var connected = Map.empty[String, (Option[String], Option[Roles.Role], ActorRef)]
   implicit val timeout: Timeout = Timeout(1 seconds)
 
   def actorRefById(connectId : String) : ActorRef = connected.get(connectId).get._3
 
   override def receive: Receive = {
-    case Joined(connectId, role, ref) =>
+    case Joined(connectId, ref) =>
       log.info(s"new user: $connectId")
       //context.watch(ref) // subscribe to death watch
-      connected += (connectId -> (None, role, ref))
+      connected += (connectId -> (None, None, ref))
       //broadcast(PublicProtocol.Joined(id))
 
     case IdWithInMessage(connectId, message) =>
       message match {
-        case auth: PublicProtocol.login => {
+        case auth: PublicProtocol.login => {              // TODO: multiple logins reject.
           log.info(s"auth: ${connectId}")
 
           (authActor ? auth).onComplete {
-            // TODO: future.flatMap
             case Success(Role(role)) =>
-              connected.foreach(c => log.info(c.toString()))
+              //connected.foreach(c => log.info(c.toString()))
               connected.keys.find(connectId == _) match {
                 case Some(key) =>
                   val ref = actorRefById(key)
@@ -81,9 +80,9 @@ class WorkflowActor(val log: LoggingAdapter, val authActor : ActorRef)(implicit 
                   connected += (key -> (Some(auth.username), role, ref))
 
                   role match {
-                    case Roles.Admin => ref ! PublicProtocol.login_successful(user_type = "admin")
-                    case Roles.User => ref ! PublicProtocol.login_successful(user_type = "user")
-                    case Roles.Unknown => ref ! PublicProtocol.login_failed
+                    case Some(Roles.Admin) => ref ! PublicProtocol.login_successful(user_type = "admin")
+                    case Some(Roles.User) => ref ! PublicProtocol.login_successful(user_type = "user")
+                    case None => ref ! PublicProtocol.login_failed
                   }
               }
 

@@ -6,37 +6,31 @@ import com.example.shared.PublicProtocol
 
 object AuthActor {
   def props(log: LoggingAdapter): Props = Props(classOf[AuthActor], log)
-  def isAdmin(role : Roles.Role): Unit = {
+  def isAdmin(role : Option[Roles.Role]): Unit = {
     role match {
-      case Roles.Admin => return true
+      case Some(Roles.Admin) => return true
       case _ => return false
     }
   }
-  def isAuthed(role : Roles.Role): Unit = {
+  def isAuthed(role : Option[Roles.Role]): Unit = {
     role match {
-      case Roles.Admin => return true
-      case Roles.User => return true
+      case Some(Roles.Admin) | Some(Roles.User) => return true
       case _ => return false
     }
   }
 }
 
 class AuthActor(val log: LoggingAdapter) extends Actor {
-  var adminsCredentials = Map[String, String]("admin" -> "admin")
-  var userCredentials = Map[String, String] ("user1234" -> "password1234")
+  var imitateDBUserNamePassword = Map[String, String] ("admin" -> "admin", "user1234" -> "password1234") // NOT TODO: do not repeat this at home. Use hash + salt for PWD storage.
+  var imitateDBUserRole = Map[String, Roles.Role] ("admin" -> Roles.Admin, "user1234" -> Roles.User)
+  // ^^ check out my Slick + H2 in-memory DB code sample @ https://github.com/kartavtcev/records
 
   override def receive: Receive = {
     case PublicProtocol.login(username, password) =>
-      val admin = adminsCredentials.find(_ == (username, password))
-      lazy val user = userCredentials.find(_ == (username, password))
-      // TODO: use Monad.Map2 monadic combinator
-      admin match {
-        case Some(_) => sender() ! PrivateProtocol.Role(Roles.Admin)
-        case None =>
-          user match {
-            case Some(_) => sender() ! PrivateProtocol.Role(Roles.User)
-            case None => sender() ! PrivateProtocol.Role(Roles.Unknown)
-          }
-      }
+      val r =
+        imitateDBUserNamePassword
+          .find(_ == (username, password))
+          .flatMap{ case (name, _) => imitateDBUserRole.get(name) }
+      sender() ! PrivateProtocol.Role(r)
   }
 }

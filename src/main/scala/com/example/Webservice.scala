@@ -15,7 +15,7 @@ import io.circe.parser.decode
 import io.circe.syntax._
 
 import com.example.shared.PublicProtocol
-import com.example.workflow.Workflow
+import com.example.core.Workflow
 
 class Webservice(wsUrl: String) (implicit system: ActorSystem, ec: ExecutionContext) extends Directives {
 

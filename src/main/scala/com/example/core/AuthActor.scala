@@ -1,4 +1,4 @@
-package com.example.workflow
+package com.example.core
 
 import akka.actor.{Actor, Props}
 import akka.event.LoggingAdapter

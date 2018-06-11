@@ -1,4 +1,4 @@
-package com.example.workflow
+package com.example.core
 
 import akka.actor._
 import akka.event.{Logging, LoggingAdapter}
@@ -7,7 +7,7 @@ import akka.stream.OverflowStrategy
 import akka.stream.scaladsl._
 import akka.util.Timeout
 import com.example.shared.PublicProtocol
-import com.example.workflow.PrivateProtocol._
+import com.example.core.PrivateProtocol._
 
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration._

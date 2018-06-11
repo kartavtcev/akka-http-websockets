@@ -7,7 +7,6 @@ import akka.http.scaladsl.server.{Directives, Route}
 import akka.stream.scaladsl.Flow
 import com.example.core.{JsonModule, Workflow}
 import com.example.shared.PublicProtocol
-import io.circe.generic.extras.Configuration
 
 import scala.concurrent.ExecutionContext
 import scala.util.Failure
@@ -24,8 +23,6 @@ class Webservice(wsUrl: String) (implicit system: ActorSystem, ec: ExecutionCont
   }
 
   def websocketChatFlow: Flow[Message, Message, Any] = {
-    implicit val genDevConfig: Configuration = Configuration.default.withDiscriminator("$type")
-
     Flow[Message]
       .collect {
         case TextMessage.Strict(msg) ⇒ msg

@@ -68,7 +68,7 @@ class WorkflowActor(val log: LoggingAdapter, val authActor : ActorRef)(implicit 
     case IdWithInMessage(connectId, message) =>
       message match {
         case auth: PublicProtocol.login => {              // TODO: multiple logins reject.
-          log.info(s"auth: ${connectId}")
+          log.info(s"auth: ${connectId}, ${auth.username}")
 
           (authActor ? auth).onComplete {
             case Success(Role(role)) =>

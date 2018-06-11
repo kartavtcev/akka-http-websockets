@@ -5,17 +5,12 @@ import akka.event.Logging
 import akka.http.scaladsl.model.ws.{Message, TextMessage}
 import akka.http.scaladsl.server.{Directives, Route}
 import akka.stream.scaladsl.Flow
+import com.example.core.{JsonModule, Workflow}
+import com.example.shared.PublicProtocol
+import io.circe.generic.extras.Configuration
 
 import scala.concurrent.ExecutionContext
 import scala.util.Failure
-
-import io.circe.generic.extras.Configuration
-import io.circe.generic.extras.auto._
-import io.circe.parser.decode
-import io.circe.syntax._
-
-import com.example.shared.PublicProtocol
-import com.example.core.Workflow
 
 class Webservice(wsUrl: String) (implicit system: ActorSystem, ec: ExecutionContext) extends Directives {
 
@@ -36,7 +31,7 @@ class Webservice(wsUrl: String) (implicit system: ActorSystem, ec: ExecutionCont
         case TextMessage.Strict(msg) ⇒ msg
         //case TextMessage.Streamed(msg) => msg // Ignore if message is not in one chunk, unlikely, as messages are small
       }
-      .map(decode[PublicProtocol.Message](_))
+      .map(JsonModule.decode(_))
       .map {
         case Right(msg) => msg
         case Left(err) =>
@@ -45,7 +40,7 @@ class Webservice(wsUrl: String) (implicit system: ActorSystem, ec: ExecutionCont
       }
       .via(workflow.flow)
       .map {
-        case msg: PublicProtocol.Message ⇒ TextMessage.Strict(msg.asJson.noSpaces)
+        case msg: PublicProtocol.Message ⇒ TextMessage.Strict(JsonModule.toJson(msg))
       }
       .via(reportErrorsFlow)
   }

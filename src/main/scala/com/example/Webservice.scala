@@ -18,7 +18,7 @@ class Webservice(wsUrl: String) (implicit system: ActorSystem, ec: ExecutionCont
 
   def route: Route = {
     pathPrefix(wsUrl) {
-          handleWebSocketMessages(websocketChatFlow)
+      handleWebSocketMessages(websocketChatFlow)
     }
   }
 

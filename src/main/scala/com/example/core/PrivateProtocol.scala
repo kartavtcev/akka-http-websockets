@@ -9,8 +9,10 @@ object PrivateProtocol {
   case class Left(connectId: String) extends Event
 
   case class Role(role : Option[Roles.Role]) extends Event
-  case class IdWithInMessage(connectId: String, message: PublicProtocol.Message) extends Event
+  case class IdWithInMessage(id: String, message: PublicProtocol.Message) extends Event
   case class RoleByNameRequest(username: String) extends Event
+
+  case class TableEvent(table: Tables.TableBase, users: Vector[String])
 }
 
 object Roles {

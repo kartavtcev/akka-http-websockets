@@ -14,19 +14,23 @@ object PublicProtocol {
 
   case object not_authorized extends Message
 
+  sealed trait ITableMessage extends Message
+
   // user
-  object subscribe_tables extends Message
-  object unsubscribe_tables extends Message
+  object subscribe_tables extends ITableMessage
+  object unsubscribe_tables extends ITableMessage
+
+  sealed trait TableBase extends ITableMessage
+  case class table(title: String, participants : Int, update_id: Long) extends TableBase
+  case class table_deleted(title: String) extends TableBase // resp
 
   // admin
-  case class table(participants : Int, title: String, update_id: Long)
-  object get_tables extends Message
-  case class tables(tables : List[table]) extends Message
+  object get_tables extends ITableMessage
 
+  case class tables(tables : List[TableBase]) extends ITableMessage
 
-  case class add_table(title: String, participants: Int) extends Message  // no response
-  case class edit_table(title: String, participants: Int, update_id: Long) extends Message // no response is success
-  case class delete_table(title: String) extends Message // req
+  case class add_table(title: String, participants: Int) extends ITableMessage  // no response
+  case class edit_table(title: String, participants: Int, update_id: Long) extends ITableMessage // no response is success
+  case class delete_table(title: String) extends ITableMessage // req
 
-  case class table_deleted(title: String) extends Message // resp
 }

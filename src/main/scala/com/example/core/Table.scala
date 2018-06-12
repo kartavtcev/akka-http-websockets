@@ -1,3 +1,7 @@
 package com.example.core
 
-case class Table (participants : Int, title: String, updateId: Long)
+object Tables {
+  sealed trait TableBase
+  case class TableDTO(title: String, participants: Int, updateId: Long) extends TableBase
+  case class TableDeleted(title: String) extends TableBase
+}

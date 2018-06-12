@@ -61,7 +61,7 @@ object WorkflowActor {
 class WorkflowActor(val log: LoggingAdapter, val authActor : ActorRef, val tableManagerActor : ActorRef)
                    (implicit ec: ExecutionContext) extends Actor {
   var connected = Map.empty[String, (Option[String], ActorRef)] // store only username if user is authenticated + authorized
-  implicit val timeout: Timeout = Timeout(10 seconds)
+  implicit val timeout: Timeout = Timeout(1 seconds)
 
   def actorRefById(connectId: String): ActorRef = connected.get(connectId).get._2
 

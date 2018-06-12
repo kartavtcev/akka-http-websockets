@@ -22,7 +22,7 @@ object AuthActor {
 
 // auth actor handles all things related to authentication & authorization
 class AuthActor(val log: LoggingAdapter) extends Actor {
-  val imitateDBUserNamePassword = Map[String, String] ("admin" -> "admin", "user1234" -> "password1234") // NOT TODO: do not repeat this at home. Use hash + salt for PWD storage.
+  val imitateDBUserNamePassword = Map[String, String] ("admin" -> "admin", "user1234" -> "password1234") // TODO: do not repeat this at home. Use hash + salt for PWD storage.
   val imitateDBUserRole = Map[String, Roles.Role] ("admin" -> Roles.Admin, "user1234" -> Roles.User)
   // ^^ check out my Slick + H2 in-memory DB code sample @ https://github.com/kartavtcev/records
 

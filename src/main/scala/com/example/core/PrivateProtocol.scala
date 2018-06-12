@@ -13,6 +13,7 @@ object PrivateProtocol {
   case class RoleByNameRequest(username: String) extends Event
 
   case class TableEvent(table: Tables.TableBase, users: Vector[String])
+  case class TablesEvent(tables: Vector[Tables.TableBase])
 }
 
 object Roles {

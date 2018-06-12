@@ -33,7 +33,7 @@ class Webservice(wsUrl: String) (implicit system: ActorSystem, ec: ExecutionCont
         case Right(msg) => msg
         case Left(err) =>
           log.error(err.toString())
-          PublicProtocol.failure("Error happened. Sorry :(")
+          PublicProtocol.fail("Error happened. Sorry :(")
       }
       .via(workflow.flow)
       .map {

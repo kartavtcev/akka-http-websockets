@@ -8,7 +8,7 @@ object PublicProtocol {
   case class ping(seq : Int) extends Message
   case class pong(seq: Int) extends Message
 
-  case class failure(message: String) extends Message
+  case class fail(message: String) extends Message
 
   // API ADTs below are approximate & based on my memory of the test assignment
 
@@ -20,13 +20,16 @@ object PublicProtocol {
   object subscribe_tables extends ITableMessage
   object unsubscribe_tables extends ITableMessage
 
-  sealed trait TableBase extends ITableMessage
+  sealed trait TableBase ////extends ITableMessage
   case class table(title: String, participants : Int, update_id: Long) extends TableBase
   case class table_deleted(title: String) extends TableBase // resp
+
+  case class single_table(table : TableBase) extends ITableMessage
 
   // admin
   object get_tables extends ITableMessage
 
+  //case class tables(tables : List[TableBase]) extends ITableMessage
   case class tables(tables : List[TableBase]) extends ITableMessage
 
   case class add_table(title: String, participants: Int) extends ITableMessage  // no response

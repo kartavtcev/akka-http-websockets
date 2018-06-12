@@ -20,20 +20,19 @@ object PublicProtocol {
   object subscribe_tables extends ITableMessage
   object unsubscribe_tables extends ITableMessage
 
-  sealed trait TableBase ////extends ITableMessage
-  case class table(title: String, participants : Int, update_id: Long) extends TableBase
-  case class table_deleted(title: String) extends TableBase // resp
-
   case class single_table(table : TableBase) extends ITableMessage
 
   // admin
   object get_tables extends ITableMessage
 
-  //case class tables(tables : List[TableBase]) extends ITableMessage
   case class tables(tables : List[TableBase]) extends ITableMessage
 
-  case class add_table(title: String, participants: Int) extends ITableMessage  // no response
-  case class edit_table(title: String, participants: Int, update_id: Long) extends ITableMessage // no response is success
-  case class delete_table(title: String) extends ITableMessage // req
+  case class add_table(title: String, participants: Int) extends ITableMessage
+  case class edit_table(title: String, participants: Int, update_id: Long) extends ITableMessage
+  case class delete_table(title: String) extends ITableMessage
 
+
+  sealed trait TableBase
+  case class table(title: String, participants : Int, update_id: Long) extends TableBase
+  case class table_deleted(title: String) extends TableBase
 }

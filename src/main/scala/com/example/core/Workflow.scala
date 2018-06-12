@@ -188,8 +188,8 @@ class WorkflowActor(val log: LoggingAdapter, val authActor : ActorRef, val table
         case msg: PublicProtocol.fail =>
           actorRefById(connectId) ! PublicProtocol.fail
 
-        case msg: PublicProtocol.Message =>
-          log.error(s"Unmatched message: ${msg.toString}")
+        case unmatched =>
+          log.error(s"Unmatched message: ${unmatched.toString}")
           actorRefById(connectId) ! PublicProtocol.fail("Error happened. Sorry :(")
       }
 

@@ -26,6 +26,9 @@ class TableManagerActor(val log: LoggingAdapter) extends Actor {
           subscribers = subscribers :+ name
         case PublicProtocol.unsubscribe_tables =>
           subscribers = subscribers.filterNot(_ == name)
+
+        case unmatched =>
+          log.error(s"Unmatched message: ${unmatched.toString}")
       }
     case PublicProtocol.get_tables =>
       sender() ! TablesEvent(tables.values.toVector)

@@ -5,7 +5,10 @@ import org.scalatest.{Matchers, WordSpec}
 
 class JsonModuleSpec extends WordSpec with Matchers {
   "decode" should {
-    "parse ping" in {
+    "parse ping with out of order $type & space" in {
+      JsonModule.decode("""{"$type":"ping", "seq":1}""") should be(Right(PublicProtocol.ping(1)))
+    }
+    "parse ping with in order $type" in {
       JsonModule.decode("""{"seq":1,"$type":"ping"}""") should be(Right(PublicProtocol.ping(1)))
     }
   }

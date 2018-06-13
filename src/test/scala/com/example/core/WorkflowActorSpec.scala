@@ -29,10 +29,13 @@ class WorkflowActorSpec(_system: ActorSystem) extends TestKit(_system) with Word
 
       val workflowActor = system.actorOf(WorkflowActor.props(log, authActor.ref, tableManagerActor.ref), "workflowActor")
 
-      workflowActor ! PrivateProtocol.Joined("connect id UUID", testActor)
-      workflowActor ! PrivateProtocol.IdWithInMessage("connect id UUID", PublicProtocol.ping(1))
+      val uuid = "connect UUID"
+      val seq = 1
 
-      expectMsg(1 second, PublicProtocol.pong(1))
+      workflowActor ! PrivateProtocol.Joined(uuid, testActor)
+      workflowActor ! PrivateProtocol.IdWithInMessage(uuid, PublicProtocol.ping(seq))
+
+      expectMsg(1 second, PublicProtocol.pong(seq))
     }
   }
 }

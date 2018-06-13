@@ -84,7 +84,7 @@ class WorkflowActor(val log: LoggingAdapter, val authActor : ActorRef, val table
     case IdWithInMessage(connectId, message) =>
       message match {
 
-        case auth: PublicProtocol.login => { // TODO: multiple logins reject.
+        case auth: PublicProtocol.login => {
 
           log.info(s"auth: ${connectId}, ${auth.username}")
 

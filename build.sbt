@@ -14,10 +14,10 @@ lazy val root = (project in file(".")).
       "com.typesafe.akka" %% "akka-http-xml"        % akkaHttpVersion,
       "com.typesafe.akka" %% "akka-stream"          % akkaVersion,
 
-      //"com.typesafe.akka" %% "akka-http-testkit"    % akkaHttpVersion % Test,
-      //"com.typesafe.akka" %% "akka-testkit"         % akkaVersion     % Test,
-      //"com.typesafe.akka" %% "akka-stream-testkit"  % akkaVersion     % Test,
-      //"org.scalatest"     %% "scalatest"            % "3.0.1"         % Test
+      "com.typesafe.akka" %% "akka-http-testkit"    % akkaHttpVersion % Test,
+      "com.typesafe.akka" %% "akka-testkit"         % akkaVersion     % Test,
+      "com.typesafe.akka" %% "akka-stream-testkit"  % akkaVersion     % Test,
+      "org.scalatest"     %% "scalatest"            % "3.0.1"         % Test
     )
     ++ Seq(
       "io.circe" %% "circe-core",
@@ -26,4 +26,6 @@ lazy val root = (project in file(".")).
       "io.circe" %% "circe-parser",
       "io.circe" %% "circe-shapes"
     ).map(_ % circeVersion)
+    ++ Seq("org.typelevel" %% "cats-core" % "1.1.0"),
+    scalacOptions += "-Ypartial-unification"
   )

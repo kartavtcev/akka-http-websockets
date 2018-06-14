@@ -18,7 +18,7 @@ class WorkflowActorSpec(_system: ActorSystem) extends TestKit(_system) with Word
   }
 
   "Workflow actor" must {
-    "Process Join. Reply pong to ping message." in {
+    "process Join, reply pong to ping message." in {
 
       lazy val log = Logging(system, classOf[WorkflowActorSpec])
       val authActor = TestProbe()

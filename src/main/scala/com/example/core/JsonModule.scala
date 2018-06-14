@@ -1,10 +1,9 @@
 package com.example.core
 
+import com.example.shared.PublicProtocol
 import io.circe.generic.extras.Configuration
 import io.circe.generic.extras.auto._
 import io.circe.syntax._
-
-import com.example.shared.PublicProtocol
 
 object JsonModule {
   implicit val genDevConfig: Configuration = Configuration.default.withDiscriminator("$type")

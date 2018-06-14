@@ -140,7 +140,7 @@ class WorkflowActor(val log: LoggingAdapter, val authActor : ActorRef, val table
                       (tableManagerActor ? message).onComplete {
                         case Success(TablesEvent(tables)) =>
                           val publicTables = Tables.listOfPrivateTablesToPublic(tables).toList
-                          actorRefById(connectId) ! PublicProtocol.tables(publicTables)
+                          actorRefById(connectId) ! PublicProtocol.table_list(publicTables)
                         case Failure(err) => log.error(err.toString)
                       }
                     } else {

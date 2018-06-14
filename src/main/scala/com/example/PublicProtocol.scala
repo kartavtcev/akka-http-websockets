@@ -1,5 +1,9 @@
 package com.example.shared
 
+import cats.syntax.functor._
+import io.circe.{ Decoder, Encoder }, io.circe.generic.auto._
+import io.circe.syntax._
+
 object PublicProtocol {
   sealed trait Message
   case class login(username: String, password: String) extends Message
@@ -25,7 +29,7 @@ object PublicProtocol {
   // admin
   object get_tables extends ITableMessage
 
-  case class tables(tables : List[TableBase]) extends ITableMessage
+  case class table_list(tables : List[TableBase]) extends Message
 
   case class add_table(title: String, participants: Int) extends ITableMessage
   case class edit_table(title: String, participants: Int, update_id: Long) extends ITableMessage
@@ -33,6 +37,18 @@ object PublicProtocol {
 
 
   sealed trait TableBase
-  case class table(title: String, participants : Int, update_id: Long) extends TableBase
+  case class table(name: String, participants : Int, id: Long) extends TableBase
   case class table_deleted(title: String) extends TableBase
+  object TableBase {
+    implicit val encodeTable: Encoder[PublicProtocol.TableBase] = Encoder.instance {
+      case table @ PublicProtocol.table(_, _, _) => table.asJson
+      case td @ PublicProtocol.table_deleted(_) => td.asJson
+    }
+
+    implicit val decodeTable: Decoder[PublicProtocol.TableBase] =
+      List[Decoder[PublicProtocol.TableBase]](
+        Decoder[PublicProtocol.table].widen,
+        Decoder[PublicProtocol.table_deleted].widen
+      ).reduceLeft(_ or _)
+  }
 }

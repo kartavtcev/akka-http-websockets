@@ -1,6 +1,5 @@
-package com.example.core
+package com.example.shared
 
-import com.example.shared.PublicProtocol
 import org.scalatest.{Matchers, WordSpec}
 
 class JsonModuleSpec extends WordSpec with Matchers {
@@ -13,7 +12,7 @@ class JsonModuleSpec extends WordSpec with Matchers {
     }
     "parse nested tables types json without $type field" in {
       JsonModule.decode("""{"tables":[{"name":"name","participants":10,"id":1}],"$type":"table_list"}""") should
-        be(Right(PublicProtocol.table_list(List(PublicProtocol.table("name", 10, 1)))))
+        be(Right(PublicProtocol.table_list(List(PublicProtocol.table(Some(1), "name", 10)))))
     }
   }
   "encode" should {
@@ -21,7 +20,7 @@ class JsonModuleSpec extends WordSpec with Matchers {
       JsonModule.toJson(PublicProtocol.pong(1) : PublicProtocol.Message) should be("""{"seq":1,"$type":"pong"}""")
     }
     "produce nested tables types json without $type field" in {
-      JsonModule.toJson(PublicProtocol.table_list(List(PublicProtocol.table("name", 10, 1))) : PublicProtocol.Message) should
+      JsonModule.toJson(PublicProtocol.table_list(List(PublicProtocol.table(Some(1), "name", 10))) : PublicProtocol.Message) should
         be("""{"tables":[{"name":"name","participants":10,"id":1}],"$type":"table_list"}""")
     }
   }

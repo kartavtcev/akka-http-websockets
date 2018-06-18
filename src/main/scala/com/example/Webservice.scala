@@ -5,8 +5,8 @@ import akka.event.Logging
 import akka.http.scaladsl.model.ws.{Message, TextMessage}
 import akka.http.scaladsl.server.{Directives, Route}
 import akka.stream.scaladsl.Flow
-import com.example.core.{JsonModule, Workflow}
-import com.example.shared.PublicProtocol
+import com.example.core.Workflow
+import com.example.shared.{PublicProtocol, JsonModule}
 
 import scala.concurrent.ExecutionContext
 import scala.util.Failure

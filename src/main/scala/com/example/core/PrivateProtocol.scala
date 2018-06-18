@@ -1,5 +1,6 @@
 package com.example.core
 
+import scala.collection.immutable.Seq
 import akka.actor.ActorRef
 import com.example.shared.PublicProtocol
 
@@ -12,8 +13,8 @@ object PrivateProtocol {
   case class IdWithInMessage(id: String, message: PublicProtocol.Message) extends Event
   case class RoleByNameRequest(username: String) extends Event
 
-  case class TableEvent(table: Tables.TableBase, users: Vector[String])
-  case class TablesEvent(tables: Vector[Tables.TableBase])
+  case class TableEvent(table: Tables.TableBase, users: Seq[String])
+  case class TablesEvent(tables: Seq[Tables.TableBase])
 }
 
 object Roles {

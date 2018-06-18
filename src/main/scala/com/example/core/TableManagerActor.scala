@@ -5,50 +5,60 @@ import akka.event.LoggingAdapter
 import com.example.core.PrivateProtocol._
 import com.example.shared.PublicProtocol
 
-
 object TableManagerActor {
   def props(log: LoggingAdapter): Props = Props(classOf[TableManagerActor], log)
 }
 
 class TableManagerActor(val log: LoggingAdapter) extends Actor {
   // TODO: tables to Observable collection
-  var tables = Map[String, Tables.TableBase](
-    "Blackjack" -> Tables.TableDTO("Blackjack", 15, 1),
-    "Roulette" -> Tables.TableDTO("Roulette", 10, 3),
-    "Dragon Tiger" -> Tables.TableDeleted("Dragon Tiger"))
+  var tables = Map[Int, Tables.TableBase](
+    1 -> Tables.TableDTO(1, "Blackjack", 15),
+    3 -> Tables.TableDTO(3, "Roulette", 10))
+  //,
+    //"Dragon Tiger" -> Tables.TableDeleted("Dragon Tiger"))
 
   var subscribers = Vector[String]()
+
+  /*
+  def insertId(afterId : Int) : Int = {
+    val ids = tables.keys.toList.sorted /// TODO
+    //val first = ids.headOption.getOrElse(-1)
+  }
+  */
 
   override def receive: Receive = {
     case IdWithInMessage(name, message) =>
       message match {
         case PublicProtocol.subscribe_tables =>
           subscribers = subscribers :+ name
+          sender() ! TablesEvent(tables.values.to[collection.immutable.Seq])
+
         case PublicProtocol.unsubscribe_tables =>
           subscribers = subscribers.filterNot(_ == name)
 
         case unmatched =>
           log.error(s"Unmatched message: ${unmatched.toString}")
       }
-    case PublicProtocol.get_tables =>
-      sender() ! TablesEvent(tables.values.toVector)
 
-    case PublicProtocol.add_table(title, participants) =>
-      val add = Tables.TableDTO(title, participants, 1)
-      tables -= title
-      tables += title -> add
+/*
+    case PublicProtocol.add_table(after_id, table) =>   // TODO: after_id
+      val add = Tables.TableDTO(after_id, table.name, table.participants)
+      tables -= table.name
+      tables += table.name -> add
       sender() ! TableEvent(add, subscribers)
 
-    case PublicProtocol.edit_table(title, participants, update_id) =>
-      val edit = Tables.TableDTO(title, participants, update_id)
-      tables -= title
-      tables += title -> edit
+    case PublicProtocol.update_table(table) =>
+      val edit = Tables.publicToPrivate(table)
+      tables -= table.name
+      tables += table.name -> edit
       sender() ! TableEvent(edit, subscribers)
 
-    case PublicProtocol.delete_table(title) =>
-      val delete = Tables.TableDeleted(title)
-      tables -= title
-      tables += title -> delete
+    case PublicProtocol.remove_table(id) =>
+      //val delete = Tables.TableDeleted(title)
+      tables -= id
+      //tables += id.toString() -> delete
       sender() ! TableEvent(delete, subscribers)
+        */
   }
+
 }

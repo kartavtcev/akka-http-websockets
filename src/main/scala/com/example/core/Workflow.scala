@@ -6,13 +6,11 @@ import akka.pattern.ask
 import akka.stream.OverflowStrategy
 import akka.stream.scaladsl._
 import akka.util.Timeout
+import com.example.core.PrivateProtocol._
+import com.example.shared.PublicProtocol
 
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration._
-import scala.util.{Failure, Success}
-
-import com.example.shared.PublicProtocol
-import com.example.core.PrivateProtocol._
 
 trait Workflow {
   def flow: Flow[PublicProtocol.Message, PublicProtocol.Message, Any]
@@ -88,8 +86,9 @@ class WorkflowActor(val log: LoggingAdapter, val authActor : ActorRef, val table
 
           log.info(s"auth: ${connectId}, ${auth.username}")
 
-          (authActor ? auth).onComplete {
-            case Success(Role(role)) =>
+          (authActor ? auth) map {
+            case //Success(
+              Role(role) =>
               if (isAlreadyAuthorizedFromDifferentMachine(connectId, auth.username)) {
                 actorRefById(connectId) ! PublicProtocol.fail("Already authorized from different machine")
               } else {
@@ -107,27 +106,62 @@ class WorkflowActor(val log: LoggingAdapter, val authActor : ActorRef, val table
                   case None => ref ! PublicProtocol.login_failed
                 }
               }
-            case Failure(err) => log.error(err.toString)
+            //case Failure(err) => log.error(err.toString)
           }
         }
 
-        case PublicProtocol.subscribe_tables | PublicProtocol.unsubscribe_tables =>
-
+        case PublicProtocol.subscribe_tables =>
           usernameById(connectId) match {
             case None => actorRefById(connectId) ! PublicProtocol.not_authorized
             case Some(name) =>
-              (authActor ? PrivateProtocol.RoleByNameRequest(name))
+              (authActor ? PrivateProtocol.RoleByNameRequest(name)).map {
+                case Role(role) =>
+                  if (AuthActor.isAuthed(role)) {
+                    (tableManagerActor ? IdWithInMessage(name, message)).map {
+                      case TablesEvent(tables) =>
+                        actorRefById(connectId) ! PublicProtocol.table_list(
+                                                    Tables.listOfPrivateTablesToPublic(tables).toList)
+                    }
+                  } else {
+                    actorRefById(connectId) ! PublicProtocol.not_authorized
+                  }
+              } // .recover{ case err => log.error(err.toString) } // will be handled by Route.seal, bubble-up exceptions
+
+
+                /*
                 .onComplete {
                   case Success(Role(role)) =>
                     if (AuthActor.isAuthed(role)) {
-                      tableManagerActor ! IdWithInMessage(name, message)
+                      (tableManagerActor ? IdWithInMessage(name, message)).onComplete {
+                        case Success(tables) => actorRefById(connectId) ! tables
+                        case Failure(err) => log.error(err.toString)
+                      }
                     } else {
                       actorRefById(connectId) ! PublicProtocol.not_authorized
                     }
                   case Failure(err) => log.error(err.toString)
                 }
+                */
           }
 
+        case PublicProtocol.unsubscribe_tables =>
+          usernameById(connectId) match {
+            case None => actorRefById(connectId) ! PublicProtocol.not_authorized
+            case Some(name) =>
+              (authActor ? PrivateProtocol.RoleByNameRequest(name))
+                .map {
+                  //case Success(Role(role)) =>
+                  case Role(role) =>
+                    if (AuthActor.isAuthed(role)) {
+                      tableManagerActor ! IdWithInMessage(name, message)
+                    } else {
+                      actorRefById(connectId) ! PublicProtocol.not_authorized
+                    }
+                  //case Failure(err) => log.error(err.toString)
+                }
+          }
+
+          /*
         case PublicProtocol.get_tables =>
 
           usernameById(connectId) match {
@@ -149,10 +183,11 @@ class WorkflowActor(val log: LoggingAdapter, val authActor : ActorRef, val table
                   case Failure(err) => log.error(err.toString)
                 }
           }
-
+*/
+          /*
         case PublicProtocol.add_table(_, _) |
-             PublicProtocol.edit_table(_, _, _) |
-             PublicProtocol.delete_table(_) =>
+             PublicProtocol.update_table(_, _, _) |
+             PublicProtocol.remove_table(_) =>
 
           usernameById(connectId) match {
             case None => actorRefById(connectId) ! PublicProtocol.not_authorized
@@ -163,7 +198,7 @@ class WorkflowActor(val log: LoggingAdapter, val authActor : ActorRef, val table
                     if (AuthActor.isAdmin(role)) {
                       (tableManagerActor ? message).onComplete {
                         case Success(TableEvent(table, subscribers)) =>
-                          val singleTable = PublicProtocol.single_table(Tables.tablePrivateToPublic(table))
+                          val singleTable = PublicProtocol.single_table(Tables.privateToPublic(table))
                           subscribers.foreach { s =>
                             connected
                               .find {
@@ -180,7 +215,7 @@ class WorkflowActor(val log: LoggingAdapter, val authActor : ActorRef, val table
                     }
                   case Failure(err) => log.error(err.toString)
                 }
-          }
+          }*/
 
         case PublicProtocol.ping(seq) =>
           actorRefById(connectId) ! PublicProtocol.pong(seq)

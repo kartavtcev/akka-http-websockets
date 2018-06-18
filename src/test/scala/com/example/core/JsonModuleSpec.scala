@@ -21,7 +21,7 @@ class JsonModuleSpec extends WordSpec with Matchers {
     }
     "produce nested tables types json without $type field" in {
       JsonModule.toJson(PublicProtocol.table_list(List(PublicProtocol.table(Some(1), "name", 10))) : PublicProtocol.Message) should
-        be("""{"tables":[{"name":"name","participants":10,"id":1}],"$type":"table_list"}""")
+        be("""{"tables":[{"id":1,"name":"name","participants":10}],"$type":"table_list"}""")
     }
   }
 }

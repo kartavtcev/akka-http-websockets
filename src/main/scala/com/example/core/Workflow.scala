@@ -90,7 +90,7 @@ class WorkflowActor(val log: LoggingAdapter, val authActor : ActorRef, val table
           log.info(s"auth: ${connectId}, ${auth.username}")
 
           (authActor ? auth) map {
-            case //Success(
+            case
               Role(role) =>
               if (isAlreadyAuthorizedFromDifferentMachine(connectId, auth.username)) {
                 actorRefById(connectId) ! PublicProtocol.fail("Already authorized from different machine")
@@ -109,7 +109,6 @@ class WorkflowActor(val log: LoggingAdapter, val authActor : ActorRef, val table
                   case None => ref ! PublicProtocol.login_failed
                 }
               }
-            //case Failure(err) => log.error(err.toString)
           }
         }
 
@@ -136,14 +135,12 @@ class WorkflowActor(val log: LoggingAdapter, val authActor : ActorRef, val table
             case Some(name) =>
               (authActor ? PrivateProtocol.RoleByNameRequest(name))
                 .map {
-                  //case Success(Role(role)) =>
                   case Role(role) =>
                     if (AuthActor.isAuthed(role)) {
                       tableManagerActor ! IdWithInMessage(name, message)
                     } else {
                       actorRefById(connectId) ! PublicProtocol.not_authorized
                     }
-                  //case Failure(err) => log.error(err.toString)
                 }
           }
 
@@ -160,7 +157,6 @@ class WorkflowActor(val log: LoggingAdapter, val authActor : ActorRef, val table
                     if (AuthActor.isAdmin(role)) {
                       (tableManagerActor ? message).onComplete {
                         case Success(TableEvent(event, subscribers)) =>
-                          //val singleTable = PublicProtocol.single_table(Tables.privateToPublic(table))
                           subscribers.foreach { s =>
                             connected
                               .find {

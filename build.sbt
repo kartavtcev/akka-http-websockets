@@ -26,6 +26,4 @@ lazy val root = (project in file(".")).
       "io.circe" %% "circe-parser",
       "io.circe" %% "circe-shapes"
     ).map(_ % circeVersion)
-    //++ Seq("org.typelevel" %% "cats-core" % "1.1.0"),
-    //scalacOptions += "-Ypartial-unification"
   )

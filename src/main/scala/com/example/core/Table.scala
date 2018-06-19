@@ -14,7 +14,6 @@ object Tables {
   def privateToPublic(privateTable : Table) : PublicProtocol.table =
     privateTable match {
       case Table(id, title, participants) => PublicProtocol.table(Some(id), title, participants)
-      //case TableDeleted(title) => PublicProtocol.table_deleted(title)
     }
 
   def publicToPrivate(publicTable : PublicProtocol.table, newId : Int = -1) : Table = {

@@ -7,22 +7,23 @@ import com.example.shared.PublicProtocol
 // 1. Not to use current PublicProtocol case classes naming (may be could be fixed with circe @annonations)
 // 2. Having data domain models conversions   to/from   API models, aka production project.
 object Tables {
-  sealed trait TableBase
-  case class TableDTO(id: Int, title: String, participants: Int) extends TableBase
+    //sealed trait TableBase
+  case class Table(id: Int, title: String, participants: Int) //extends TableBase
   //case class TableDeleted(title: String) extends TableBase
 
-  def privateToPublic(privateTable : TableBase) : PublicProtocol.TableBase =
+  def privateToPublic(privateTable : Table) : PublicProtocol.table =
     privateTable match {
-      case TableDTO(id, title, participants) => PublicProtocol.table(Some(id), title, participants)
+      case Table(id, title, participants) => PublicProtocol.table(Some(id), title, participants)
       //case TableDeleted(title) => PublicProtocol.table_deleted(title)
     }
 
-  def publicToPrivate(publicTable : PublicProtocol.table) : TableBase = {
+  def publicToPrivate(publicTable : PublicProtocol.table, newId : Int = -1) : Table = {
     publicTable match {
-      case PublicProtocol.table(Some(id), title, participants) => TableDTO(id, title, participants)
+      case PublicProtocol.table(Some(id), title, participants) => Table(id, title, participants)
+      case PublicProtocol.table(None, title, participants) => Table(newId, title, participants)
     }
   }
 
-  def listOfPrivateTablesToPublic(tables : Seq[TableBase]) : Seq[PublicProtocol.TableBase] =
+  def listOfPrivateTablesToPublic(tables : Seq[Table]) : Seq[PublicProtocol.table] =
     tables.map(privateToPublic(_))
 }

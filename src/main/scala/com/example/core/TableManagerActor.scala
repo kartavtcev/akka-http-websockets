@@ -11,27 +11,33 @@ object TableManagerActor {
 
 class TableManagerActor(val log: LoggingAdapter) extends Actor {
   // TODO: tables to Observable collection
-  var tables = Map[Int, Tables.TableBase](
-    1 -> Tables.TableDTO(1, "Blackjack", 15),
-    3 -> Tables.TableDTO(3, "Roulette", 10))
+  var tables = Map[Int, Tables.Table](
+    2 -> Tables.Table(2, "Blackjack", 15),
+    3 -> Tables.Table(3, "Roulette", 10))
   //,
     //"Dragon Tiger" -> Tables.TableDeleted("Dragon Tiger"))
 
   var subscribers = Vector[String]()
 
-  /*
-  def insertId(afterId : Int) : Int = {
-    val ids = tables.keys.toList.sorted /// TODO
-    //val first = ids.headOption.getOrElse(-1)
+
+  def calcInsertId(afterId : Int) : Int = {
+    if(afterId == -1) {
+      tables.keys.min - 1
+    }
+    else {
+      val larderIds = tables.keys.filter(_ > afterId )
+      //val first = ids.headOption.getOrElse(-1)
+      Stream.from(afterId + 1) takeWhile( id => !larderIds.exists(_ == id)) head
+    }
   }
-  */
 
   override def receive: Receive = {
     case IdWithInMessage(name, message) =>
       message match {
         case PublicProtocol.subscribe_tables =>
           subscribers = subscribers :+ name
-          sender() ! TablesEvent(tables.values.to[collection.immutable.Seq])
+          sender() ! TablesEvent(
+                      Tables.listOfPrivateTablesToPublic(tables.values.to[collection.immutable.Seq]))
 
         case PublicProtocol.unsubscribe_tables =>
           subscribers = subscribers.filterNot(_ == name)
@@ -40,12 +46,20 @@ class TableManagerActor(val log: LoggingAdapter) extends Actor {
           log.error(s"Unmatched message: ${unmatched.toString}")
       }
 
-/*
+
     case PublicProtocol.add_table(after_id, table) =>   // TODO: after_id
-      val add = Tables.TableDTO(after_id, table.name, table.participants)
-      tables -= table.name
-      tables += table.name -> add
-      sender() ! TableEvent(add, subscribers)
+      val newId = calcInsertId(after_id)
+      //tables -= table.name
+      if(newId < 0) {
+        sender() ! TableEvent(PublicProtocol.add_failed(newId), subscribers)
+      } else {
+        val add = Tables.publicToPrivate(table, newId)
+        tables += newId -> add
+        sender() ! TableEvent(
+          PublicProtocol.table_added(after_id, Tables.privateToPublic(add)),
+          subscribers)
+      }
+
 
     case PublicProtocol.update_table(table) =>
       val edit = Tables.publicToPrivate(table)
@@ -58,7 +72,7 @@ class TableManagerActor(val log: LoggingAdapter) extends Actor {
       tables -= id
       //tables += id.toString() -> delete
       sender() ! TableEvent(delete, subscribers)
-        */
+
   }
 
 }

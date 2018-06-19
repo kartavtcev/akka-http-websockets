@@ -13,8 +13,8 @@ object PrivateProtocol {
   case class IdWithInMessage(id: String, message: PublicProtocol.Message) extends Event
   case class RoleByNameRequest(username: String) extends Event
 
-  case class TableEvent(table: Tables.TableBase, users: Seq[String])
-  case class TablesEvent(tables: Seq[Tables.TableBase])
+  case class TableEvent(event: PublicProtocol.Message, users: Seq[String])
+  case class TablesEvent(tables: Seq[PublicProtocol.table])
 }
 
 object Roles {

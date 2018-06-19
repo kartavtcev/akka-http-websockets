@@ -11,6 +11,9 @@ import com.example.shared.PublicProtocol
 
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration._
+import scala.util.{Failure, Success}
+
+
 
 trait Workflow {
   def flow: Flow[PublicProtocol.Message, PublicProtocol.Message, Any]
@@ -119,29 +122,12 @@ class WorkflowActor(val log: LoggingAdapter, val authActor : ActorRef, val table
                   if (AuthActor.isAuthed(role)) {
                     (tableManagerActor ? IdWithInMessage(name, message)).map {
                       case TablesEvent(tables) =>
-                        actorRefById(connectId) ! PublicProtocol.table_list(
-                                                    Tables.listOfPrivateTablesToPublic(tables).toList)
+                        actorRefById(connectId) ! PublicProtocol.table_list(tables.toList)
                     }
                   } else {
                     actorRefById(connectId) ! PublicProtocol.not_authorized
                   }
               } // .recover{ case err => log.error(err.toString) } // will be handled by Route.seal, bubble-up exceptions
-
-
-                /*
-                .onComplete {
-                  case Success(Role(role)) =>
-                    if (AuthActor.isAuthed(role)) {
-                      (tableManagerActor ? IdWithInMessage(name, message)).onComplete {
-                        case Success(tables) => actorRefById(connectId) ! tables
-                        case Failure(err) => log.error(err.toString)
-                      }
-                    } else {
-                      actorRefById(connectId) ! PublicProtocol.not_authorized
-                    }
-                  case Failure(err) => log.error(err.toString)
-                }
-                */
           }
 
         case PublicProtocol.unsubscribe_tables =>
@@ -161,32 +147,8 @@ class WorkflowActor(val log: LoggingAdapter, val authActor : ActorRef, val table
                 }
           }
 
-          /*
-        case PublicProtocol.get_tables =>
-
-          usernameById(connectId) match {
-            case None => actorRefById(connectId) ! PublicProtocol.not_authorized
-            case Some(name) =>
-              (authActor ? PrivateProtocol.RoleByNameRequest(name))
-                .onComplete {
-                  case Success(Role(role)) =>
-                    if (AuthActor.isAdmin(role)) {
-                      (tableManagerActor ? message).onComplete {
-                        case Success(TablesEvent(tables)) =>
-                          val publicTables = Tables.listOfPrivateTablesToPublic(tables).toList
-                          actorRefById(connectId) ! PublicProtocol.table_list(publicTables)
-                        case Failure(err) => log.error(err.toString)
-                      }
-                    } else {
-                      actorRefById(connectId) ! PublicProtocol.not_authorized
-                    }
-                  case Failure(err) => log.error(err.toString)
-                }
-          }
-*/
-          /*
         case PublicProtocol.add_table(_, _) |
-             PublicProtocol.update_table(_, _, _) |
+             PublicProtocol.update_table(_) |
              PublicProtocol.remove_table(_) =>
 
           usernameById(connectId) match {
@@ -197,15 +159,15 @@ class WorkflowActor(val log: LoggingAdapter, val authActor : ActorRef, val table
                   case Success(Role(role)) =>
                     if (AuthActor.isAdmin(role)) {
                       (tableManagerActor ? message).onComplete {
-                        case Success(TableEvent(table, subscribers)) =>
-                          val singleTable = PublicProtocol.single_table(Tables.privateToPublic(table))
+                        case Success(TableEvent(event, subscribers)) =>
+                          //val singleTable = PublicProtocol.single_table(Tables.privateToPublic(table))
                           subscribers.foreach { s =>
                             connected
                               .find {
                                 case (_, (username, _)) => username == Some(s)
                               }
                               .foreach {
-                                case (_, (_, ref)) => ref ! singleTable
+                                case (_, (_, ref)) => ref ! event
                               }
                           }
                         case Failure(err) => log.error(err.toString)
@@ -215,7 +177,7 @@ class WorkflowActor(val log: LoggingAdapter, val authActor : ActorRef, val table
                     }
                   case Failure(err) => log.error(err.toString)
                 }
-          }*/
+          }
 
         case PublicProtocol.ping(seq) =>
           actorRefById(connectId) ! PublicProtocol.pong(seq)

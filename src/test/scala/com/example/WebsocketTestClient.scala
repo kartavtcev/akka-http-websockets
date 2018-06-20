@@ -1,12 +1,12 @@
-package com.example.shared
+package com.example
 
-import akka.{Done, NotUsed}
 import akka.actor._
 import akka.http.scaladsl._
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.ws._
 import akka.stream._
 import akka.stream.scaladsl._
+import akka.{Done, NotUsed}
 
 import scala.concurrent.{ExecutionContext, Future}
 

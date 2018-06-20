@@ -9,7 +9,6 @@ import org.scalatest._
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.concurrent.duration._
-import com.example.shared.WebsocketTestClient
 
 
 class IntergrationSpec(_system: ActorSystem)  extends TestKit(_system) with WordSpecLike with Matchers with BeforeAndAfterAll {

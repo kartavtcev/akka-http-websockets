@@ -13,7 +13,7 @@ object PrivateProtocol {
   case class IdWithInMessage(id: String, message: PublicProtocol.Message) extends Event
   case class RoleByNameRequest(username: String) extends Event
 
-  case class TableEvent(event: PublicProtocol.Message, users: Seq[String])
+  case class TableEvent(event: PublicProtocol.Message, users: Seq[String])  // Mix of public protocol to private is not good, yet speeds up coding
   case class TablesEvent(tables: Seq[PublicProtocol.table])
 }
 

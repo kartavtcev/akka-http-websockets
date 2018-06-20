@@ -1,18 +1,17 @@
 package com.example.core
 
+import scala.concurrent.ExecutionContext
+import scala.concurrent.duration._
+
 import akka.actor._
 import akka.event.{Logging, LoggingAdapter}
 import akka.pattern.ask
 import akka.stream.OverflowStrategy
 import akka.stream.scaladsl._
 import akka.util.Timeout
+
 import com.example.core.PrivateProtocol._
 import com.example.shared.PublicProtocol
-
-import scala.concurrent.ExecutionContext
-import scala.concurrent.duration._
-
-
 
 trait Workflow {
   def flow: Flow[PublicProtocol.Message, PublicProtocol.Message, Any]

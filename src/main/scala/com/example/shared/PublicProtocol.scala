@@ -10,15 +10,11 @@ object PublicProtocol {
 
   case class fail(message: String) extends Message // This case is not present in test assignment
 
-  // API ADTs below are approximate & based on my memory of the test assignment
-
   case object not_authorized extends Message
-
 
   // user
   object subscribe_tables extends Message
   object unsubscribe_tables extends Message
-
 
   // admin
   case class table_list(tables : List[table]) extends Message

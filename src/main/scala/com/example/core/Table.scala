@@ -3,7 +3,7 @@ package com.example.core
 import scala.collection.immutable.Seq
 import com.example.shared.PublicProtocol
 
-// separate Table type is not required here. It's for 2 reasons:
+// separate Table type is not strictly required here. It's for 2 reasons:
 // 1. Not to use current PublicProtocol case classes naming (may be could be fixed with circe @annonations)
 // 2. Having data domain models conversions   to/from   API models, aka production project.
 object Tables {

@@ -10,15 +10,13 @@ object TableManagerActor {
 }
 
 class TableManagerActor(val log: LoggingAdapter) extends Actor {
-  // TODO: may be tables to Observable collection
-  var tables = Vector[Tables.Table](
-    Tables.Table(2, "Blackjack", 15),
-    Tables.Table(3, "Roulette", 10))
+  // TODO: may be tables to Observable collection, persistence
+  var tables = Vector[Tables.Table]()
   var subscribers = Vector[String]()
 
-
   def calcInsertId(afterId : Int) : Int = {
-    if(afterId < - 1) -1
+    if(tables.isEmpty && afterId >= -1) afterId + 1
+    else if(afterId < - 1) -1
     else if(afterId == -1) {
       tables.map(_.id).min - 1
     }
@@ -34,7 +32,7 @@ class TableManagerActor(val log: LoggingAdapter) extends Actor {
         case PublicProtocol.subscribe_tables =>
           subscribers = subscribers :+ name
           sender() ! TablesEvent(
-                      Tables.listOfPrivateTablesToPublic(tables))
+                      Tables.listOfPrivateTablesToPublic(tables.sortBy(_.id)))
 
         case PublicProtocol.unsubscribe_tables =>
           subscribers = subscribers.filterNot(_ == name)

@@ -85,13 +85,3 @@ class IntergrationSpec(_system: ActorSystem)  extends TestKit(_system) with Word
     }
   }
 }
-
-
-// TODO ???
-/*
-Server stopped
-[ERROR] [06/20/2018 08:15:59.101] [com-example-httpServer-akka.actor.default-dispatcher-8] [Webservice(akka://com-example-httpServer)] WS stream failed with akka.stream.AbruptTerminationException: Processor actor [Actor[akka://com-example-httpServer/system/StreamSupervisor-0/flow-1-0-detacher#-286950123]] terminated abruptly
-[ERROR] [06/20/2018 08:15:59.117] [com-example-httpServer-akka.actor.default-dispatcher-2] [Webservice(akka://com-example-httpServer)] WS stream failed with akka.stream.AbruptTerminationException: Processor actor [Actor[akka://com-example-httpServer/system/StreamSupervisor-0/flow-2-0-detacher#-1847442788]] terminated abruptly
-[ERROR] [06/20/2018 08:15:59.117] [com-example-httpServer-akka.actor.default-dispatcher-3] [akka.actor.ActorSystemImpl(com-example-httpServer)] Websocket handler failed with Processor actor [Actor[akka://com-example-httpServer/system/StreamSupervisor-0/flow-1-0-detacher#-286950123]] terminated abruptly (akka.stream.AbruptTerminationException: Processor actor [Actor[akka://com-example-httpServer/system/StreamSupervisor-0/flow-1-0-detacher#-286950123]] terminated abruptly)
-[ERROR] [06/20/2018 08:15:59.117] [com-example-httpServer-akka.actor.default-dispatcher-9] [akka.actor.ActorSystemImpl(com-example-httpServer)] Websocket handler failed with Processor actor [Actor[akka://com-example-httpServer/system/StreamSupervisor-0/flow-2-0-detacher#-1847442788]] terminated abruptly (akka.stream.AbruptTerminationException: Processor actor [Actor[akka://com-example-httpServer/system/StreamSupervisor-0/flow-2-0-detacher#-1847442788]] terminated abruptly)
-*/

@@ -58,7 +58,7 @@ class IntergrationSpec(_system: ActorSystem)  extends TestKit(_system) with Word
                               "participants": 10
                             }
                           }""")
-      adminTestProbe.expectNoMessage()
+      adminTestProbe.expectNoMessage(500 millis)
       adminClient.sendMessage("""{
                             "$type": "add_table",
                             "after_id": 1,
@@ -67,9 +67,7 @@ class IntergrationSpec(_system: ActorSystem)  extends TestKit(_system) with Word
                               "participants": 15
                             }
                           }""")
-      adminTestProbe.expectNoMessage()
-
-      //Thread.sleep(1000)  // if test will fail with empty tables below
+      adminTestProbe.expectNoMessage(500 millis)
 
       user1Client.sendMessage("""{"$type":"login", "username":"user1234", "password": "password1234"}""")
       user1TestProve.expectMsg(1 second, """{"user_type":"user","$type":"login_successful"}""")

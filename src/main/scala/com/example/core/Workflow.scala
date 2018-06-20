@@ -175,7 +175,7 @@ class WorkflowActor(val log: LoggingAdapter, val authActor : ActorRef, val table
           actorRefById(connectId) ! PublicProtocol.pong(seq)
 
         case msg: PublicProtocol.fail =>
-          actorRefById(connectId) ! PublicProtocol.fail
+          actorRefById(connectId) ! msg
 
         case unmatched =>
           log.error(s"Unmatched message: ${unmatched.toString}")

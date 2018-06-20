@@ -1,13 +1,15 @@
 package com.example.core
 
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.duration._
+
 import akka.actor.ActorSystem
 import akka.event.Logging
 import akka.testkit.{ImplicitSender, TestKit, TestProbe}
-import com.example.shared.PublicProtocol
+
 import org.scalatest.{BeforeAndAfterAll, MustMatchers, WordSpecLike}
 
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.duration._
+import com.example.shared.PublicProtocol
 
 class WorkflowActorSpec(_system: ActorSystem) extends TestKit(_system) with WordSpecLike with BeforeAndAfterAll with MustMatchers with ImplicitSender{
 

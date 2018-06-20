@@ -11,7 +11,6 @@ import com.example.shared.PublicProtocol
 
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration._
-import scala.util.{Failure, Success}
 
 
 
@@ -152,11 +151,11 @@ class WorkflowActor(val log: LoggingAdapter, val authActor : ActorRef, val table
             case None => actorRefById(connectId) ! PublicProtocol.not_authorized
             case Some(name) =>
               (authActor ? PrivateProtocol.RoleByNameRequest(name))
-                .onComplete {
-                  case Success(Role(role)) =>
+                .map {
+                  case Role(role) =>
                     if (AuthActor.isAdmin(role)) {
-                      (tableManagerActor ? message).onComplete {
-                        case Success(TableEvent(event, subscribers)) =>
+                      (tableManagerActor ? message).map {
+                        case TableEvent(event, subscribers) =>
                           subscribers.foreach { s =>
                             connected
                               .find {
@@ -166,12 +165,10 @@ class WorkflowActor(val log: LoggingAdapter, val authActor : ActorRef, val table
                                 case (_, (_, ref)) => ref ! event
                               }
                           }
-                        case Failure(err) => log.error(err.toString)
                       }
                     } else {
                       actorRefById(connectId) ! PublicProtocol.not_authorized
                     }
-                  case Failure(err) => log.error(err.toString)
                 }
           }
 

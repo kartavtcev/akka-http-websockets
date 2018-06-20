@@ -1,9 +1,5 @@
 package com.example.shared
 
-import io.circe.generic.auto._
-import io.circe.syntax._
-import io.circe.{Decoder, Encoder}
-
 object PublicProtocol {
   sealed trait Message
   case class login(username: String, password: String) extends Message
@@ -42,11 +38,4 @@ object PublicProtocol {
   case class table_updated(table : table) extends Message
 
   case class table(id: Option[Int], name: String, participants: Int)
-  object TableImpl {
-    implicit val encodeTable: Encoder[table] = Encoder.instance {
-      case table @ PublicProtocol.table(_, _, _) => table.asJson
-    }
-
-    implicit val decodeTable: Decoder[table] = Decoder[PublicProtocol.table]
-  }
 }

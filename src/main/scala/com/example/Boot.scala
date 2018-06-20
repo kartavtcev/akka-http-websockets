@@ -6,8 +6,7 @@ import akka.http.scaladsl.Http.ServerBinding
 import akka.http.scaladsl.server.Route
 import akka.stream.ActorMaterializer
 
-import scala.concurrent.duration.Duration
-import scala.concurrent.{Await, ExecutionContext, Future}
+import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success}
 
 object Server {
@@ -50,6 +49,6 @@ object Server {
 object Boot extends App {
 
   val params = Server.start
-  Await.result(params._1.whenTerminated, Duration.Inf)
+ // Await.result(params._1.whenTerminated, Duration.Inf)
 
 }

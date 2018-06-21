@@ -14,7 +14,7 @@ class WebsocketTestClient(url: String, receiverRef: ActorRef)
                          (implicit system : ActorSystem, materializer: ActorMaterializer, ex: ExecutionContext) {
 
   val req = WebSocketRequest(uri = url)
-  val webSocketFlow = Http().webSocketClientFlow(req)
+  val flow = Http().webSocketClientFlow(req)
 
   val out: Source[Message, ActorRef] =
     Source.actorRef[TextMessage.Strict](bufferSize = 10, OverflowStrategy.fail)
@@ -26,7 +26,7 @@ class WebsocketTestClient(url: String, receiverRef: ActorRef)
 
   val ((ws, upgradeResponse), closed) =
     out
-      .viaMat(webSocketFlow)(Keep.both)
+      .viaMat(flow)(Keep.both)
       .toMat(in)(Keep.both)
       .run()
 

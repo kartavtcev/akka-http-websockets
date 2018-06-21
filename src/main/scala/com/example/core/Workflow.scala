@@ -42,7 +42,7 @@ object Workflow {
         // source -> materialized actor -> NewUser + ActorRef -> workflow actor; + PublicProtocol.Message's Out
         // buffer 1 message, then fail; actor Tell ! strategy
         val out =
-          Source.actorRef[PublicProtocol.Message](1, OverflowStrategy.fail)
+          Source.actorRef[PublicProtocol.Message](10, OverflowStrategy.fail)
             .mapMaterializedValue(workflowActor ! Joined(connectId, _))
 
         Flow.fromSinkAndSource(in, out)

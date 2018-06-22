@@ -11,7 +11,6 @@ lazy val root = (project in file(".")).
     name := "akka-http-websockets",
     libraryDependencies ++= Seq(
       "com.typesafe.akka" %% "akka-http"            % akkaHttpVersion,
-      "com.typesafe.akka" %% "akka-http-xml"        % akkaHttpVersion,
       "com.typesafe.akka" %% "akka-stream"          % akkaVersion,
 
       "com.typesafe.akka" %% "akka-http-testkit"    % akkaHttpVersion % Test,
@@ -23,7 +22,6 @@ lazy val root = (project in file(".")).
       "io.circe" %% "circe-core",
       "io.circe" %% "circe-generic",
       "io.circe" %% "circe-generic-extras",
-      "io.circe" %% "circe-parser",
-      "io.circe" %% "circe-shapes"
+      "io.circe" %% "circe-parser"
     ).map(_ % circeVersion)
   )

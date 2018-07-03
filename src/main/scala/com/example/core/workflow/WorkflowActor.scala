@@ -74,17 +74,13 @@ class WorkflowActor(val log: LoggingAdapter, val authActor : ActorRef, val table
           usernameById(connectId) match {
             case None => actorRefById(connectId) ! PublicProtocol.not_authorized
             case Some(name) =>
-              (authActor ? PrivateProtocol.RoleByNameRequest(name)).map {
-                case Role(role) =>
-                  if (AuthActor.isAuthed(role)) {
-                    (tableManagerActor ? IdWithInMessage(name, message)).map {
-                      case TablesEvent(tables) =>
-                        actorRefById(connectId) ! PublicProtocol.table_list(tables.toList)
-                    }
-                  } else {
-                    actorRefById(connectId) ! PublicProtocol.not_authorized
-                  }
-              } // .recover{ case err => log.error(err.toString) } // will be handled by Route.seal, bubble-up exceptions
+              for (Role(role) <- authActor ? PrivateProtocol.RoleByNameRequest(name))
+                if (AuthActor.isAuthed(role)) {
+                  for (TablesEvent(tables) <- tableManagerActor ? IdWithInMessage(name, message))
+                    actorRefById(connectId) ! PublicProtocol.table_list(tables.toList)
+                } else {
+                  actorRefById(connectId) ! PublicProtocol.not_authorized
+                }
           }
 
         case PublicProtocol.unsubscribe_tables =>
@@ -128,7 +124,7 @@ class WorkflowActor(val log: LoggingAdapter, val authActor : ActorRef, val table
                     } else {
                       actorRefById(connectId) ! PublicProtocol.not_authorized
                     }
-                }
+                } // .recover{ case err => log.error(err.toString) } // will be handled by Route.seal, bubble-up exceptions
           }
 
         case PublicProtocol.ping(seq) =>

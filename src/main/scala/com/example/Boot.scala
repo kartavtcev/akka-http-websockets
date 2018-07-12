@@ -50,6 +50,8 @@ object Server {
           .onComplete(_ => {
             system.terminate()
             println("Server stopped")
+            _system = None
+            _binding = None
           })
       case _ => ()
     }

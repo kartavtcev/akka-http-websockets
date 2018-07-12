@@ -6,8 +6,9 @@ import akka.http.scaladsl.Http.ServerBinding
 import akka.http.scaladsl.server.Route
 import akka.stream.ActorMaterializer
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.Future
 import scala.util.{Failure, Success}
+import scala.concurrent.ExecutionContext.Implicits.global
 
 object Server {
 
@@ -16,7 +17,6 @@ object Server {
 
   def start: String = {
     implicit val system: ActorSystem = ActorSystem("com-example-httpServer")
-    import system.dispatcher
     _system = Some(system)
     implicit val materializer: ActorMaterializer = ActorMaterializer()
 
@@ -42,7 +42,7 @@ object Server {
     s"ws://${interface}:${port}/${wsUrl}"
   }
 
-  def stop (implicit ec: ExecutionContext): Unit = {
+  def stop: Unit = {
     (_system, _binding) match {
       case (Some(system), Some(binding)) =>
         binding

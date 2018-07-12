@@ -10,9 +10,14 @@ import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success}
 
 object Server {
-  def start: (ActorSystem, Future[ServerBinding], String) = {
+
+  var _system: Option[ActorSystem] = None
+  var _binding: Option[Future[ServerBinding]] = None
+
+  def start: String = {
     implicit val system: ActorSystem = ActorSystem("com-example-httpServer")
     import system.dispatcher
+    _system = Some(system)
     implicit val materializer: ActorMaterializer = ActorMaterializer()
 
     val config = system.settings.config
@@ -24,6 +29,7 @@ object Server {
     lazy val routes: Route = Route.seal { service.route }
 
     val binding = Http().bindAndHandle(routes, interface, port)
+    _binding = Some(binding)
     binding.onComplete {
       case Success(binding) ⇒
         val localAddress = binding.localAddress
@@ -33,22 +39,23 @@ object Server {
         system.terminate()
     }
 
-    (system, binding, s"ws://${interface}:${port}/${wsUrl}")
+    s"ws://${interface}:${port}/${wsUrl}"
   }
 
-  def stop(system : ActorSystem, binding : Future[ServerBinding]) (implicit ec: ExecutionContext) = {
-    binding
-      .flatMap(_.unbind())
-      .onComplete(_ => {
-        system.terminate()
-        println("Server stopped")
-      })
+  def stop (implicit ec: ExecutionContext): Unit = {
+    (_system, _binding) match {
+      case (Some(system), Some(binding)) =>
+        binding
+          .flatMap(_.unbind())
+          .onComplete(_ => {
+            system.terminate()
+            println("Server stopped")
+          })
+      case _ => ()
+    }
   }
 }
 
 object Boot extends App {
-
-  val params = Server.start
- // Await.result(params._1.whenTerminated, Duration.Inf)
-
+  Server.start
 }

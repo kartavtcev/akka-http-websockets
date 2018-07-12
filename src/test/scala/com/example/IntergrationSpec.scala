@@ -1,13 +1,11 @@
 package com.example
 
 import akka.actor._
-import akka.http.scaladsl.Http.ServerBinding
 import akka.stream.ActorMaterializer
 import akka.testkit._
 import org.scalatest._
 
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
 import scala.concurrent.duration._
 
 
@@ -15,17 +13,14 @@ class IntergrationSpec(_system: ActorSystem)  extends TestKit(_system) with Word
 
   def this() = this(ActorSystem("com-example-test"))
 
-  var params: Option[(ActorSystem, Future[ServerBinding], String)] = None
+  var url: Option[String] = None
 
   override def beforeAll: Unit = {
-    params = Some(Server.start)
+    url = Some(Server.start)
   }
 
   override def afterAll: Unit = {
-    params match {
-      case Some((system, future, _)) => Server.stop(system, future)
-      case _ => ()
-    }
+    Server.stop
   }
 
   "Service" should {
@@ -34,17 +29,15 @@ class IntergrationSpec(_system: ActorSystem)  extends TestKit(_system) with Word
       implicit val system = _system
       implicit val materializer = ActorMaterializer()
 
-      val url = params.get._3
-
       val user1TestProve = TestProbe()
       val adminTestProbe = TestProbe()
 
       val user2TestProve = TestProbe()
 
-      val adminClient = new WebsocketTestClient(url, adminTestProbe.ref)
-      val user1Client = new WebsocketTestClient(url, user1TestProve.ref)
+      val adminClient = new WebsocketTestClient(url.get, adminTestProbe.ref)
+      val user1Client = new WebsocketTestClient(url.get, user1TestProve.ref)
 
-      val user2Client = new WebsocketTestClient(url, user2TestProve.ref)
+      val user2Client = new WebsocketTestClient(url.get, user2TestProve.ref)
 
 
       adminClient.sendMessage("""{"$type":"login", "username":"admin", "password": "admin"}""")
